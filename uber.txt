@@ -1,0 +1,159 @@
+# -----------------------------
+# IMPORTING LIBRARIES
+# -----------------------------
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import haversine as hs  # pip install haversine
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.ensemble import RandomForestRegressor
+
+# -----------------------------
+# LOAD DATA
+# -----------------------------
+df = pd.read_csv("uber.csv")
+
+# Drop unnecessary columns
+df = df.drop(['Unnamed: 0', 'key'], axis=1)
+
+# -----------------------------
+# BASIC INFO
+# -----------------------------
+print(df.info())
+print(df.describe())
+
+# -----------------------------
+# HANDLE MISSING VALUES
+# -----------------------------
+df['dropoff_latitude'].fillna(df['dropoff_latitude'].mean(), inplace=True)
+df['dropoff_longitude'].fillna(df['dropoff_longitude'].median(), inplace=True)
+
+# -----------------------------
+# CONVERT DATETIME
+# -----------------------------
+df['pickup_datetime'] = pd.to_datetime(df['pickup_datetime'], errors='coerce')
+
+# Extract datetime features
+df = df.assign(
+    hour=df['pickup_datetime'].dt.hour,
+    day=df['pickup_datetime'].dt.day,
+    month=df['pickup_datetime'].dt.month,
+    year=df['pickup_datetime'].dt.year,
+    dayofweek=df['pickup_datetime'].dt.dayofweek
+)
+
+# Drop the original datetime column
+df.drop('pickup_datetime', axis=1, inplace=True)
+
+# -----------------------------
+# OUTLIER HANDLING
+# -----------------------------
+def remove_outlier(df1, col):
+    Q1 = df1[col].quantile(0.25)
+    Q3 = df1[col].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_whisker = Q1 - 1.5 * IQR
+    upper_whisker = Q3 + 1.5 * IQR
+    df1[col] = np.clip(df1[col], lower_whisker, upper_whisker)
+    return df1
+
+def treat_outliers_all(df1):
+    num_cols = df1.select_dtypes(include=[np.number]).columns
+    for col in num_cols:
+        df1 = remove_outlier(df1, col)
+    return df1
+
+df = treat_outliers_all(df)
+
+# -----------------------------
+# DISTANCE CALCULATION (HAVERSINE)
+# -----------------------------
+travel_dist = []
+for pos in range(len(df)):
+    long1, lati1 = df.loc[pos, 'pickup_longitude'], df.loc[pos, 'pickup_latitude']
+    long2, lati2 = df.loc[pos, 'dropoff_longitude'], df.loc[pos, 'dropoff_latitude']
+    loc1, loc2 = (lati1, long1), (lati2, long2)
+    distance = hs.haversine(loc1, loc2)
+    travel_dist.append(distance)
+
+df['dist_travel_km'] = travel_dist
+
+# -----------------------------
+# FILTER INCORRECT DATA
+# -----------------------------
+# Keep distances between 1 and 130 km
+df = df.loc[(df['dist_travel_km'] >= 1) & (df['dist_travel_km'] <= 130)]
+
+# Remove invalid coordinates
+incorrect_coordinates = df.loc[
+    (df['pickup_latitude'] > 90) | (df['pickup_latitude'] < -90) |
+    (df['dropoff_latitude'] > 90) | (df['dropoff_latitude'] < -90) |
+    (df['pickup_longitude'] > 180) | (df['pickup_longitude'] < -180) |
+    (df['dropoff_longitude'] > 180) | (df['dropoff_longitude'] < -180)
+]
+
+df = df.drop(incorrect_coordinates.index, errors='ignore')
+
+print("Remaining observations in the dataset:", df.shape)
+
+# -----------------------------
+# CHECK FOR NULLS AND CORRELATION
+# -----------------------------
+sns.heatmap(df.isnull(), cbar=False)
+plt.title("Missing Values Heatmap")
+plt.show()
+
+plt.figure(figsize=(10,6))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title("Correlation Heatmap")
+plt.show()
+
+# -----------------------------
+# FEATURE SELECTION
+# -----------------------------
+X = df[['pickup_longitude', 'pickup_latitude', 'dropoff_longitude', 'dropoff_latitude',
+        'passenger_count', 'hour', 'day', 'month', 'year', 'dayofweek', 'dist_travel_km']]
+y = df['fare_amount']
+
+# -----------------------------
+# TRAIN-TEST SPLIT
+# -----------------------------
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+# -----------------------------
+# LINEAR REGRESSION MODEL
+# -----------------------------
+regression = LinearRegression()
+regression.fit(X_train, y_train)
+pred_lr = regression.predict(X_test)
+
+# Metrics for Linear Regression
+r2_lr = r2_score(y_test, pred_lr)
+MSE_lr = mean_squared_error(y_test, pred_lr)
+RMSE_lr = np.sqrt(MSE_lr)
+
+print("\n--- Linear Regression ---")
+print("R2 Score:", r2_lr)
+print("MSE:", MSE_lr)
+print("RMSE:", RMSE_lr)
+
+# -----------------------------
+# RANDOM FOREST REGRESSOR
+# -----------------------------
+rf = RandomForestRegressor(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+pred_rf = rf.predict(X_test)
+
+# Metrics for Random Forest
+r2_rf = r2_score(y_test, pred_rf)
+MSE_rf = mean_squared_error(y_test, pred_rf)
+RMSE_rf = np.sqrt(MSE_rf)
+
+print("\n--- Random Forest Regressor ---")
+print("R2 Score:", r2_rf)
+print("MSE:", MSE_rf)
+print("RMSE:", RMSE_rf)

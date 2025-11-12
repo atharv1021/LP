@@ -1,0 +1,56 @@
+import java.util.*;
+
+class Item {
+    int value, weight;
+
+    Item(int value, int weight) {
+        this.value = value;
+        this.weight = weight;
+    }
+}
+
+public class FractionalKnapsack {
+    static double getMaxValue(Item[] arr, int capacity) {
+        Arrays.sort(arr, new Comparator<Item>() {
+            public int compare(Item a, Item b) {
+                double ratio1 = (double) a.value / a.weight;
+                double ratio2 = (double) b.value / b.weight;
+                return Double.compare(ratio2, ratio1);
+            }
+        });
+        double totalValue = 0.0;
+        for (Item i : arr) {
+            if (capacity - i.weight >= 0) {
+                capacity -= i.weight;
+                totalValue += i.value;
+            } else {
+                double fraction = ((double) capacity / i.weight);
+                totalValue += (i.value * fraction);
+                break;
+            }
+        }
+        return totalValue;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of items: ");
+        int n = sc.nextInt();
+
+        Item[] arr = new Item[n];
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter value and weight of item " + (i + 1) + ": ");
+            int value = sc.nextInt();
+            int weight = sc.nextInt();
+            arr[i] = new Item(value, weight);
+        }
+        System.out.print("Enter knapsack capacity: ");
+        int capacity = sc.nextInt();
+        double maxValue = getMaxValue(arr, capacity);
+        System.out.println("\nMaximum value we can obtain = " + maxValue);
+        sc.close();
+    }
+}
+//Time Complexity - O(nlogn)
+//space Complexity - O(n)
