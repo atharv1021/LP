@@ -1,0 +1,59 @@
+3. Write a program to solve a fractional Knapsack problem using a greedy method.
+
+import java.util.*;
+
+public class _3FractionalKnapsack {
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Input
+        System.out.print("Enter number of items: ");
+        int n = sc.nextInt();
+
+        int[] value = new int[n];
+        int[] weight = new int[n];
+
+        System.out.print("Enter values of items: ");
+        for (int i = 0; i < n; i++) {
+            value[i] = sc.nextInt();
+        }
+
+        System.out.print("Enter weights of items: ");
+        for (int i = 0; i < n; i++) {
+            weight[i] = sc.nextInt();
+        }
+
+        System.out.print("Enter maximum capacity of bag: ");
+        int capacity = sc.nextInt();
+
+        // Create a list of items (value, weight, ratio)
+        double[][] items = new double[n][3];
+        for (int i = 0; i < n; i++) {
+            items[i][0] = value[i];
+            items[i][1] = weight[i];
+            items[i][2] = (double) value[i] / weight[i];  // value/weight ratio
+        }
+
+        // Sort items by ratio (high to low)
+        Arrays.sort(items, (a, b) -> Double.compare(b[2], a[2]));
+
+        double totalValue = 0;
+
+        // Pick items one by one
+        for (int i = 0; i < n; i++) {
+            if (capacity >= items[i][1]) {
+                // Take whole item
+                totalValue += items[i][0];
+                capacity -= items[i][1];
+            } else {
+                // Take fraction of item
+                totalValue += items[i][0] * (capacity / items[i][1]);
+                capacity = 0;
+                break;
+            }
+        }
+
+        System.out.println("Maximum value in Knapsack = " + totalValue);
+    }
+}

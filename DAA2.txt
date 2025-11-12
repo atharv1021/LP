@@ -1,0 +1,66 @@
+2. Write a program to implement Huffman Encoding using a greedy strategy
+
+import java.util.PriorityQueue;
+
+//O(n log n)
+class Node {
+    char ch;       // character
+    int freq;      // frequency
+    Node left;     // left child
+    Node right;    // right child
+
+    Node(char ch, int freq) {
+        this.ch = ch;
+        this.freq = freq;
+    }
+
+    Node(int freq, Node left, Node right) {
+        this.ch = '\0';   // empty for internal node
+        this.freq = freq;
+        this.left = left;
+        this.right = right;
+    }
+}
+
+public class _2Huffman {
+
+    // print Huffman codes
+    static void printCodes(Node root, String code) {
+        if (root == null)
+            return;
+
+        // if leaf node → print character and code
+        if (root.left == null && root.right == null) {
+            System.out.println(root.ch + " -> " + code);
+            return;
+        }
+
+        printCodes(root.left, code + "0");
+        printCodes(root.right, code + "1");
+    }
+
+    public static void main(String[] args) {
+        char[] chars = {'a', 'b', 'c', 'd', 'e', 'f', 'g'};
+        int[] freq = {4, 7, 12, 14, 17, 43, 52};
+
+        // min heap (smallest frequency at top)
+        PriorityQueue<Node> pq = new PriorityQueue<>((a, b) -> a.freq - b.freq);
+
+        // create leaf nodes
+        for (int i = 0; i < chars.length; i++)
+            pq.add(new Node(chars[i], freq[i]));
+
+        // build Huffman tree
+        while (pq.size() > 1) {
+            Node x = pq.poll();  // smallest
+            Node y = pq.poll();  // next smallest
+            Node parent = new Node(x.freq + y.freq, x, y);
+            pq.add(parent);
+        }
+
+        Node root = pq.peek();
+
+        System.out.println("Huffman Codes:");
+        printCodes(root, "");
+    }
+}

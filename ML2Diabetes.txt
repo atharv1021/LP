@@ -1,0 +1,181 @@
+2 Implement K-Nearest Neighbors algorithm on diabetes.csv dataset. Compute confusionmatrix, accuracy, error rate, precision and recall on the given dataset. Dataset link : https://www.kaggle.com/datasets/abdallamahgoub/diabete
+
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score
+
+# Load dataset (make sure diabetes.csv is in the working directory)
+df = pd.read_csv("diabetes.csv")
+print(df.head())
+
+# Features and target
+X = df.drop("Outcome", axis=1)
+y = df["Outcome"]
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Feature scaling (important for KNN)
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# KNN model (you can tune n_neighbors for better accuracy)
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)
+
+# Predictions
+y_pred = knn.predict(X_test)
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+
+# Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+# Error Rate
+error_rate = 1 - accuracy
+
+# Precision
+precision = precision_score(y_test, y_pred)
+
+# Recall
+recall = recall_score(y_test, y_pred)
+
+print("Confusion Matrix:\n", cm)
+print("Accuracy:", round(accuracy, 4))
+print("Error Rate:", round(error_rate, 4))
+print("Precision:", round(precision, 4))
+print("Recall:", round(recall, 4))
+
+
+
+
+
+
+------------------------------------------------------
+
+Let’s go step-by-step — these are **key evaluation metrics** used in **Machine Learning (especially Classification problems)** 👇
+
+---
+
+## 🧠 **1. Confusion Matrix**
+
+A **Confusion Matrix** is a 2×2 table that shows how well your classification model performed — by comparing **predicted labels** with **actual labels**.
+
+|                     | **Predicted Positive**  | **Predicted Negative**  |
+| ------------------- | ----------------------- | ----------------------- |
+| **Actual Positive** | **True Positive (TP)**  | **False Negative (FN)** |
+| **Actual Negative** | **False Positive (FP)** | **True Negative (TN)**  |
+
+### 🔹 Example:
+
+Suppose a model predicts whether a patient has a disease.
+
+|                 | Predicted: Yes | Predicted: No |
+| --------------- | -------------- | ------------- |
+| **Actual: Yes** | TP = 50        | FN = 10       |
+| **Actual: No**  | FP = 5         | TN = 35       |
+
+So, total samples = 50 + 10 + 5 + 35 = **100**
+
+---
+
+## ⚙️ **2. Accuracy**
+
+**Definition:**
+The ratio of **correct predictions** to **total predictions**.
+
+[
+\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
+]
+
+**Example:**
+[
+\text{Accuracy} = \frac{50 + 35}{100} = 0.85 = 85%
+]
+
+✅ Meaning: The model correctly predicted 85% of cases.
+
+---
+
+## ⚠️ **3. Error Rate**
+
+**Definition:**
+The proportion of **incorrect predictions**.
+
+[
+\text{Error Rate} = \frac{FP + FN}{TP + TN + FP + FN}
+]
+
+**Example:**
+[
+\text{Error Rate} = \frac{5 + 10}{100} = 0.15 = 15%
+]
+
+---
+
+## 🎯 **4. Precision**
+
+**Definition:**
+Out of all the samples the model predicted as *Positive*, how many were *actually Positive*.
+
+[
+\text{Precision} = \frac{TP}{TP + FP}
+]
+
+**Example:**
+[
+\text{Precision} = \frac{50}{50 + 5} = 0.91 = 91%
+]
+
+✅ Meaning: When the model says “Yes,” it’s correct 91% of the time.
+
+---
+
+## 🔍 **5. Recall (Sensitivity / True Positive Rate)**
+
+**Definition:**
+Out of all the *actual positives*, how many did the model correctly identify?
+
+[
+\text{Recall} = \frac{TP}{TP + FN}
+]
+
+**Example:**
+[
+\text{Recall} = \frac{50}{50 + 10} = 0.83 = 83%
+]
+
+✅ Meaning: The model correctly detects 83% of real positive cases.
+
+---
+
+## 📊 **Summary Table**
+
+| Metric         | Formula                         | Meaning                                 |
+| -------------- | ------------------------------- | --------------------------------------- |
+| **Accuracy**   | (TP + TN) / (TP + TN + FP + FN) | Overall correctness                     |
+| **Error Rate** | (FP + FN) / Total               | Overall incorrectness                   |
+| **Precision**  | TP / (TP + FP)                  | How reliable positive predictions are   |
+| **Recall**     | TP / (TP + FN)                  | How many actual positives were detected |
+
+---
+
+## 💡 **Extra (Bonus): F1-Score**
+
+A balance between **Precision** and **Recall**.
+
+[
+\text{F1-Score} = 2 \times \frac{Precision \times Recall}{Precision + Recall}
+]
+
+It’s useful when data is **imbalanced** (e.g., rare diseases, fraud detection).
+
+---
+
+Would you like me to give a **simple Python example** (with sklearn) showing how to calculate all these from a confusion matrix?

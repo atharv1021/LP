@@ -1,0 +1,75 @@
+1. Write a program non-recursive and recursive program to calculate Fibonacci numbers and analyze their time and space complexity
+
+
+import java.util.*;
+public class _1FibonacciNumber
+{
+    //recursive  O(2^n)
+    public static int fibo(int n)
+    {
+        if(n<0)
+        {
+            return -1;
+        }
+        if(n==0 || n==1)
+        {
+            return n;
+        }
+        return fibo(n-1)+fibo(n-2);
+
+    }
+    //iterative O(n)
+    public static int fibo2(int n)
+    {
+        if(n<0)
+        {
+            return -1;
+        }
+        if(n==0 || n==1)
+        {
+            return n;
+        }
+        int f1=0;
+        int f2=1;
+
+        int fn=0;
+        for(int i=2;i<=n;i++)
+        {
+             fn=f1+f2;
+            
+            f1=f2;
+            f2=fn;
+        }
+
+        return fn;
+    }
+    public static void series(int n)
+    {
+        if(n<0)
+        {
+            return ;
+        }
+        
+        int f1=0;
+        int f2=1;
+        
+        System.out.print(f1+" "+f2+" ");
+        for(int i=2;i<=n;i++)
+        {
+            int f3=f1+f2;
+            System.out.print(f3+" ");
+            f1=f2;
+            f2=f3;
+        }
+    }
+    public static void main(String[] args) {
+        Scanner sc =new Scanner(System.in);
+        System.out.println("Enter the number : ");
+        int n;
+        n=sc.nextInt();
+        System.out.println(fibo(n));
+        System.out.println(fibo2(n));
+        series(n);
+
+    }
+}
